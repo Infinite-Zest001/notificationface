@@ -30,8 +30,8 @@ class MyWatchFace : CanvasWatchFaceService() {
 
         private val random = Random()
 
-        private val typeface = Typeface.createFromAsset(assets, "Roboto-Regular.ttf")
-        private val ambientTypeface = Typeface.createFromAsset(assets, "Roboto-Thin.ttf")
+        private val typeface = Typeface.createFromAsset(assets, "Product-Regular.ttf")
+        private val ambientTypeface = Typeface.createFromAsset(assets, "Product-Thin.ttf")
 
         private lateinit var calendar: Calendar
 
@@ -100,12 +100,12 @@ class MyWatchFace : CanvasWatchFaceService() {
             calendar.timeInMillis = System.currentTimeMillis()
 
             val text = String.format("%d:%02d",
-                    calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE))
+                    calendar.get(Calendar.HOUR), calendar.get(Calendar.MINUTE))
 
             val textX = bounds.width() * 0.5f
             val textY = round(bounds.height() * 0.5f +
                     if (bitmaps.isEmpty()) size * 0.1f else size * -0.033f)
-            textPaint.textSize = round(size / 3f)
+            textPaint.textSize = round(size / 4f)
             canvas.drawText(text, textX, textY, textPaint)
 
             val padding = 2
