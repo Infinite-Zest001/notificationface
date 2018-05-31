@@ -21,11 +21,11 @@ public class NotificationWatchFace extends CanvasWatchFaceService {
 
     @Override
     public Engine onCreateEngine() {
-        return new Engine();
+        return new NotificationWatchFace.Engine();
     }
 
     //Gotta fix the inner-class declaration
-    private class Engine extends CanvasWatchFaceService.Engine implements DataClient.OnDataChangedListener {
+    private class Engine extends CanvasWatchFaceService.Engine implements OnDataChangedListener {
         private Random random = new Random();
 
         private Typeface typeface = Typeface.createFromAsset(getAssets(), "Product-Regular.ttf");
@@ -35,6 +35,40 @@ public class NotificationWatchFace extends CanvasWatchFaceService {
 
         private boolean registeredTimeZoneReceiver = false;
 
+        private Paint textPaint;
+
+        private List bitmaps;
+        private List safeBitmaps;
+
+        private boolean ambient = false;
+        private boolean lowBitAmbient = false;
+        private boolean burnInProtection = false;
+
+        private BroadcastReceiver timeZoneReciever = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                calendar.setTimeZone(TimeZone.getDefault());
+                invalidate();
+            }
+        }
+
+        @Override
+        public void onCreate(SurfaceHolder holder) {
+            super.onCreate(holder);
+
+            setWatchFaceStyle(new WatchFaceStyle.Builder(NotificationWatchFace.this).build());
+
+            calendar = Calendar.getInstance();
+
+            textPaint = new Paint();
+            textPaint.setTypeface(this.typeface);
+            textPaint.setAntiAlias(true);
+            textPaint.setColor(-1);
+            textPaint.setTextAlign(Paint.Align.CENTER);
+            this.textPaint = textPaint;
+            }
+
+        }
 
     }
 }
