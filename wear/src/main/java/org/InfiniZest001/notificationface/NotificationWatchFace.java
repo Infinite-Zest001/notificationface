@@ -1,5 +1,6 @@
 package org.InfiniZest001.notificationface;
 
+import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -25,48 +26,88 @@ public class NotificationWatchFace extends CanvasWatchFaceService {
     }
 
     //Gotta fix the inner-class declaration
-    private class Engine extends CanvasWatchFaceService.Engine implements OnDataChangedListener {
+    public final class Engine extends CanvasWatchFaceService.Engine implements DataClient.OnDataChangedListener {
         private Random random = new Random();
 
-        private Typeface typeface = Typeface.createFromAsset(getAssets(), "Product-Regular.ttf");
-        private Typeface ambientTypeface = Typeface.createFromAsset(getAssets(), "Product-Regular.ttf");
+        private Typeface typeface = Typeface.createFromAsset(NotificationWatchFace.this.getAssets(), "Product-Regular.ttf");
+        private Typeface ambientTypeface = Typeface.createFromAsset(NotificationWatchFace.this.getAssets(), "Product-Regular.ttf");
 
         private Calendar calendar;
 
-        private boolean registeredTimeZoneReceiver = false;
+        private boolean registeredTimeZoneReceiver;
 
         private Paint textPaint;
 
         private List bitmaps;
         private List safeBitmaps;
 
-        private boolean ambient = false;
-        private boolean lowBitAmbient = false;
-        private boolean burnInProtection = false;
+        private boolean ambient;
+        private boolean lowBitAmbient;
+        private boolean burnInProtection;
 
-        private BroadcastReceiver timeZoneReciever = new BroadcastReceiver() {
+        private final BroadcastReceiver timeZoneReciever;
+
+        /*private BroadcastReceiver timeZoneReciever = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 calendar.setTimeZone(TimeZone.getDefault());
                 invalidate();
             }
         }
+        */
 
         @Override
         public void onCreate(SurfaceHolder holder) {
             super.onCreate(holder);
 
-            setWatchFaceStyle(new WatchFaceStyle.Builder(NotificationWatchFace.this).build());
+            this.setWatchFaceStyle((new WatchFaceStyle.Builder(NotificationWatchFace.this)).build());
 
-            calendar = Calendar.getInstance();
+            this.calendar = Calendar.getInstance();
 
-            textPaint = new Paint();
-            textPaint.setTypeface(this.typeface);
-            textPaint.setAntiAlias(true);
-            textPaint.setColor(-1);
-            textPaint.setTextAlign(Paint.Align.CENTER);
-            this.textPaint = textPaint;
+            this.textPaint = new Paint();
+            this.textPaint.setTypeface(this.typeface);
+            this.textPaint.setAntiAlias(true);
+            this.textPaint.setColor(Color.WHITE);
+            this.textPaint.setTextAlign(Paint.Align.CENTER);
             }
+
+        public void onPropertiesChanged(Bundle properties) {
+            super.onPropertiesChanged(properties);
+            this.lowBitAmbient = properties.getBoolean(
+                    WatchFaceService.PROPERTY_LOW_BIT_AMBIENT, false);
+            this.burnInProtection = properties.getBoolean(
+                    WatchFaceService.PROPERTY_BURN_IN_PROTECTION, false);
+        }
+
+        public void onAmbientModeChanged(boolean inAmbientMode) {
+            super.onAmbientModeChanged(inAmbientMode);
+            this.ambient = inAmbientMode;
+
+            if (this.lowBitAmbient) {
+                this.textPaint.setAntiAlias(!inAmbientMode);
+            }
+
+            this.textPaint.setTypeface(this.ambient ? this.ambientTypeface : this.typeface);
+        }
+
+        public void onDraw(Canvas canvas, Rect bounds) {
+            int size = bounds.width();
+
+            canvas.drawColor(Color.BLACK);
+
+            this.calendar.setTimeInMillis(System.currentTimeMillis());
+
+            String text = new String.format("%d:%02d",
+                    this.calendar.get(Calendar.HOUR), calendar.get(Calendar.MINUTE));
+
+            float textX = (float)bounds.width() * 0.5F;
+
+            //Gotta fix this
+            //float textY = (float)Math.rint((double)textX);
+
+        }
+
+        public void onDataChanged(DataEventBuffer dataEvents) {
 
         }
 
