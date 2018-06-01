@@ -13,6 +13,9 @@ import android.support.wearable.watchface.WatchFaceStyle;
 import android.view.SurfaceHolder;
 import com.google.android.gms.wearable.*;
 import java.util.*;
+
+import kotlin.collections.CollectionsKt;
+import kotlin.math.MathKt;
 import kotlin.math.round;
 import kotlin.math.roundToInt;
 
@@ -25,7 +28,6 @@ public class NotificationWatchFace extends CanvasWatchFaceService {
         return new NotificationWatchFace.Engine();
     }
 
-    //Gotta fix the inner-class declaration
     public final class Engine extends CanvasWatchFaceService.Engine implements DataClient.OnDataChangedListener {
         private Random random = new Random();
 
@@ -102,8 +104,53 @@ public class NotificationWatchFace extends CanvasWatchFaceService {
 
             float textX = (float)bounds.width() * 0.5F;
 
-            //Gotta fix this
-            //float textY = (float)Math.rint((double)textX);
+            float textY = (float)Math.rint((float)bounds.height() * 0.5F +
+                    (this.bitmaps.isEmpty() ? size * 0.1F : size * -0.033F));
+            this.textPaint.setTextSize((float)Math.rint((float)size/4F));
+            canvas.drawText(text, textX, textY, this.textPaint);
+
+            int padding = 2;
+            int x = bounds.width() / 2 - (bitmaps.size() * (ICON_SIZE + padding) /2);
+            int y = bounds.height() / 2 + MathKt.roundToInt((float)size * 0.088f);
+            if(this.ambient) {
+                int maxOffset = MathKt.roundToInt((float)size * 0.177F);
+                x += this.random.nextInt((maxOffset) - maxOffset / 2);
+                y += this.random.nextInt(maxOffset);
+            }
+
+            // TODO: Fix for iteration
+           // Bitmap bitmap;
+           // Rect rect;
+            //for(Iterator i = CollectionsKt.withIndex((this.ambient && this.burnInProtection ? this.safeBitmaps : this.bitmaps)).iterator(); i.hasNext(); canvas.drawBitmap(bitmap, rect, this.textPaint)) {
+
+            }
+        }
+
+        public void onVisibilityChanged(boolean visible) {
+            super.onVisibilityChanged(visible);
+
+            if(visible) {
+                Wearable.getDataClient(NotificationWatchFace.this).addListener(this);
+                //Wearable.getDataClient(NotificationWatchFace.this).getDataItem().addOnSuccessListener() { dataItemBuffer ->
+                //        for (dataItem : dataItemBuffer) {
+                //
+                //        }
+                //dataItemBuffer.release();
+                //invalidate();
+                registerReceiver();
+
+                //Update time zone in case it changed while we weren't visible
+                this.calendar.timeZone = TimeZone.getDefault();
+                invalidate();
+
+            }
+        }
+
+        private final void registerReceiver() {
+
+        }
+
+        private final void unregisterReceiver() {
 
         }
 
@@ -111,5 +158,12 @@ public class NotificationWatchFace extends CanvasWatchFaceService {
 
         }
 
+        private final void processDataItem(DataItem dataItem) {
+
+        }
+
+        private final Bitmap loadBitmapFromByteArray(byte[] byteArray) {
+
+        }
     }
 }
