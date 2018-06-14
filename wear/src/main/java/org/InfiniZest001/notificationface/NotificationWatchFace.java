@@ -127,7 +127,7 @@ public class NotificationWatchFace extends CanvasWatchFaceService {
             if(visible) {
                 Wearable.getDataClient(NotificationWatchFace.this).addListener(this);
                 Wearable.getDataClient(NotificationWatchFace.this).getDataItems().addOnSuccessListener((DataClient.OnDataChangedListener) { dataItemBuffer -> {
-                for( DataItem dataItem : dataItemBuffer) {
+                for(DataItem dataItem : dataItemBuffer) {
                     Engine.this.processDataItem(dataItem);
                 }
                 dataItemBuffer.release();
@@ -135,7 +135,9 @@ public class NotificationWatchFace extends CanvasWatchFaceService {
                 }
                 registerReceiver();
                 }
-        }
+        } else {
+                Wearable.getDataClient(NotificationWatchFace.this).removeListener(this);
+            }
         }
         private final void registerReceiver() {
             if (!this.registeredTimeZoneReceiver) {
