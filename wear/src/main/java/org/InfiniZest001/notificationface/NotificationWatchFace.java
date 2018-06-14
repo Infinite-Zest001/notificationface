@@ -12,23 +12,27 @@ import android.support.wearable.watchface.WatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
 import android.view.SurfaceHolder;
 import com.google.android.gms.wearable.*;
+
+import org.jfedor.notificationface.MyWatchFace;
+
 import java.util.*;
 
 import kotlin.collections.CollectionsKt;
 import kotlin.math.MathKt;
-import kotlin.math.round;
-import kotlin.math.roundToInt;
+
+import static java.lang.String.format;
 
 public class NotificationWatchFace extends CanvasWatchFaceService {
     private static final int ICON_SIZE = 48;
-    private static final val URI = "/foobar";
+    private static final String URI = "/foobar";
 
     @Override
     public Engine onCreateEngine() {
         return new NotificationWatchFace.Engine();
     }
 
-    public final class Engine extends CanvasWatchFaceService.Engine implements DataClient.OnDataChangedListener {
+    //public final class Engine extends CanvasWatchFaceService.Engine implements DataClient.OnDataChangedListener {
+    public final class Engine extends CanvasWatchFaceService.Engine {
         private Random random = new Random();
 
         private Typeface typeface = Typeface.createFromAsset(NotificationWatchFace.this.getAssets(), "Product-Regular.ttf");
@@ -40,23 +44,14 @@ public class NotificationWatchFace extends CanvasWatchFaceService {
 
         private Paint textPaint;
 
-        private List bitmaps;
-        private List safeBitmaps;
+        private List<Bitmap> bitmaps;
+        private List<Bitmap> safeBitmaps;
 
         private boolean ambient;
         private boolean lowBitAmbient;
         private boolean burnInProtection;
 
         private final BroadcastReceiver timeZoneReciever;
-
-        /*private BroadcastReceiver timeZoneReciever = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                calendar.setTimeZone(TimeZone.getDefault());
-                invalidate();
-            }
-        }
-        */
 
         @Override
         public void onCreate(SurfaceHolder holder) {
@@ -99,8 +94,8 @@ public class NotificationWatchFace extends CanvasWatchFaceService {
 
             this.calendar.setTimeInMillis(System.currentTimeMillis());
 
-            String text = new String.format("%d:%02d",
-                    this.calendar.get(Calendar.HOUR), calendar.get(Calendar.MINUTE));
+            String text = format("%d:%02d",
+                    this.calendar.get(Calendar.HOUR), this.calendar.get(Calendar.MINUTE));
 
             float textX = (float)bounds.width() * 0.5F;
 
@@ -118,11 +113,11 @@ public class NotificationWatchFace extends CanvasWatchFaceService {
                 y += this.random.nextInt(maxOffset);
             }
 
-            // TODO: Fix for iteration
-           // Bitmap bitmap;
-           // Rect rect;
-            //for(Iterator i = CollectionsKt.withIndex((this.ambient && this.burnInProtection ? this.safeBitmaps : this.bitmaps)).iterator(); i.hasNext(); canvas.drawBitmap(bitmap, rect, this.textPaint)) {
-
+            int index = 0;
+            for(Bitmap bitmap : ((this.ambient && this.burnInProtection) ? this.safeBitmaps : this.bitmaps)) {
+               canvas.drawBitmap(bitmap, null, new Rect(x +index * (ICON_SIZE + padding), y,
+                       x + index * (ICON_SIZE + padding) + ICON_SIZE, y + ICON_SIZE), this.textPaint);
+               index++;
             }
         }
 
@@ -131,23 +126,22 @@ public class NotificationWatchFace extends CanvasWatchFaceService {
 
             if(visible) {
                 Wearable.getDataClient(NotificationWatchFace.this).addListener(this);
-                //Wearable.getDataClient(NotificationWatchFace.this).getDataItem().addOnSuccessListener() { dataItemBuffer ->
-                //        for (dataItem : dataItemBuffer) {
-                //
-                //        }
-                //dataItemBuffer.release();
-                //invalidate();
+                Wearable.getDataClient(NotificationWatchFace.this).getDataItems().addOnSuccessListener((DataClient.OnDataChangedListener) { dataItemBuffer -> {
+                for( DataItem dataItem : dataItemBuffer) {
+                    Engine.this.processDataItem(dataItem);
+                }
+                dataItemBuffer.release();
+                Engine.this.invalidate();
+                }
                 registerReceiver();
-
-                //Update time zone in case it changed while we weren't visible
-                this.calendar.timeZone = TimeZone.getDefault();
-                invalidate();
+                }
+        }
+        }
+        private final void registerReceiver() {
+            if (!this.registeredTimeZoneReceiver) {
+                this.registeredTimeZoneReceiver = true;
 
             }
-        }
-
-        private final void registerReceiver() {
-
         }
 
         private final void unregisterReceiver() {
@@ -155,15 +149,23 @@ public class NotificationWatchFace extends CanvasWatchFaceService {
         }
 
         public void onDataChanged(DataEventBuffer dataEvents) {
+            for (DataEvent event : dataEvents) {
+                if (event.getType() == DataEvent.TYPE_CHANGED && event.getDataItem().getUri().getPath() == URI) {
+                    this.processDataItem(event.getDataItem());
 
+                }
+            }
         }
 
         private final void processDataItem(DataItem dataItem) {
-
+            ArrayList newBitmaps = new ArrayList();
+            ArrayList newSafeBitmaps = new ArrayList();
+            DataMapItem dataMapItem = DataMapItem.fromDataItem(dataItem);
         }
 
         private final Bitmap loadBitmapFromByteArray(byte[] byteArray) {
 
         }
+
     }
 }
