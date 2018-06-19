@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="org.jfedor.notificationface">
+    package="org.InfiniZest001.notificationface">
 
     <!-- Required to act as a custom watch face. -->
     <uses-permission android:name="android.permission.WAKE_LOCK" /> <!-- Required for complications to receive complication data and open the provider chooser. -->
@@ -14,10 +14,10 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <service
-            android:name=".NotificationListener"
+            android:name="org.InfiniZest001.notificationlistener.PhoneNotificationListener"
             android:enabled="true"
             android:exported="true"
-            android:label="NotificationListener"
+            android:label="PhoneNotificationListener"
             android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
             <intent-filter>
                 <action android:name="android.service.notification.NotificationListenerService" />
