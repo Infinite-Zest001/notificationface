@@ -1,6 +1,5 @@
 package org.InfiniZest001.notificationface;
 
-import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -15,14 +14,11 @@ import android.view.SurfaceHolder;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.wearable.*;
 
-import org.jfedor.notificationface.MyWatchFace;
 
 import java.util.*;
 
-import kotlin.collections.CollectionsKt;
 import kotlin.math.MathKt;
 
-import static java.lang.String.format;
 
 public class NotificationWatchFace extends CanvasWatchFaceService {
     private static final int ICON_SIZE = 48;
@@ -102,7 +98,7 @@ public class NotificationWatchFace extends CanvasWatchFaceService {
 
             this.calendar.setTimeInMillis(System.currentTimeMillis());
 
-            String text = format("%d:%02d",
+            String text = String.format(Locale.getDefault(), "%d:%02d",
                     this.calendar.get(Calendar.HOUR), this.calendar.get(Calendar.MINUTE));
 
             float textX = (float)bounds.width() * 0.5F;
@@ -134,38 +130,71 @@ public class NotificationWatchFace extends CanvasWatchFaceService {
 
             if(visible) {
                 Wearable.getDataClient(NotificationWatchFace.this).addListener(this);
-                //TODO: Fix line 132
-                //Wearable.getDataClient(NotificationWatchFace.this).getDataItems().addOnSuccessListener...
-                }
+                Wearable.getDataClient(NotificationWatchFace.this).getDataItems().addOnSuccessListener(new OnSuccessListener<DataItemBuffer>() {
+                    @Override
+                    public void onSuccess(DataItemBuffer dataItemBuffer) {
+                        for(DataItem dataItem : dataItemBuffer) {
+                            processDataItem(dataItem);
+                        }
+                        dataItemBuffer.release();
+                        invalidate();
+                    }
+                });
+                this.registerReceiver();
+                this.calendar.setTimeZone(TimeZone.getDefault());
+                this.invalidate();
+                } else {
+                    Wearable.getDataClient(NotificationWatchFace.this).removeListener(this);
+                    this.unregisterReceiver();
+            }
         }
-        private final void registerReceiver() {
+        private void registerReceiver() {
             if (!this.registeredTimeZoneReceiver) {
-                this.registeredTimeZoneReceiver = true;
-
+            this.registeredTimeZoneReceiver = true;
+            IntentFilter filter = new IntentFilter(Intent.ACTION_TIMEZONE_CHANGED);
+            NotificationWatchFace.this.registerReceiver(timeZoneReciever, filter);
             }
         }
 
-        private final void unregisterReceiver() {
-
+        private void unregisterReceiver() {
+            if(!this.registeredTimeZoneReceiver) {
+                this.registeredTimeZoneReceiver = false;
+                NotificationWatchFace.this.unregisterReceiver(timeZoneReciever);
+            }
         }
 
         public void onDataChanged(DataEventBuffer dataEvents) {
             for (DataEvent event : dataEvents) {
-                if (event.getType() == DataEvent.TYPE_CHANGED && event.getDataItem().getUri().getPath() == URI) {
+                if (event.getType() == DataEvent.TYPE_CHANGED && event.getDataItem().getUri().getPath().equals(URI)) {
                     this.processDataItem(event.getDataItem());
-
+                    this.invalidate();
                 }
             }
         }
 
-        private final void processDataItem(DataItem dataItem) {
+        private void processDataItem(DataItem dataItem) {
             ArrayList newBitmaps = new ArrayList();
             ArrayList newSafeBitmaps = new ArrayList();
             DataMapItem dataMapItem = DataMapItem.fromDataItem(dataItem);
+            int i = 0;
+            while (true) {
+                byte[] byteArray = dataMapItem.getDataMap().getByteArray("icon" + i);
+                byte[] safeByteArray = dataMapItem.getDataMap().getByteArray("safeicon" + i);
+                if (byteArray == null) {
+                    this.bitmaps = newBitmaps;
+                    this.safeBitmaps = newSafeBitmaps;
+                    return;
+                }
+                newBitmaps.add(this.loadBitmapFromByteArray(byteArray));
+                newSafeBitmaps.add(this.loadBitmapFromByteArray(safeByteArray));
+                i++;
+                this.bitmaps = newBitmaps;
+                this.safeBitmaps = newSafeBitmaps;
+            }
         }
 
-        private final Bitmap loadBitmapFromByteArray(byte[] byteArray) {
-
+        private Bitmap loadBitmapFromByteArray(byte[] byteArray) {
+            return BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
         }
 
     }
