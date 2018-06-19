@@ -48,24 +48,35 @@ public class PhoneNotificationListener extends NotificationListenerService {
                 continue;
             }
 
-            Bitmap bitmap = drawableToBitmap(
+            Bitmap bitmap = this.drawableToBitmap(
                     notification.getNotification().getSmallIcon().loadDrawable(this));
-            //TODO: What does it mean? Iterable
-            /*
-            if (!bitmaps.equals(true)) { it.sameAs(bitmap) }) {
-                bitmaps.add(bitmap)
+            //Extracted from Kotlin decompile
+            Iterable receiver = (Iterable)bitmaps;
+            boolean x;
+            if ( receiver instanceof Collection && ((Collection)receiver).isEmpty()) {
+                x = false;
+            } else {
+                Iterator y = receiver.iterator();
+                while(true) {
+                    if (!y.hasNext()) {
+                        x = false;
+                        break;
+                    }
+
+                    Object e = y.next();
+                    Bitmap it = (Bitmap)e;
+                    if (it.sameAs(bitmap)) {
+                        x = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!x) {
+                bitmaps.add(bitmap);
             }
         }
-        for ((i, bitmap) in bitmaps.withIndex()) {
-            putDataMapReq.dataMap.putByteArray("icon$i", bitmapToByteArray(bitmap))
-            putDataMapReq.dataMap.putByteArray("safeicon$i",
-                    bitmapToByteArray(createBurnInSafeBitmap(bitmap)))
-        }
-        putDataMapReq.setUrgent()
-        val putDataReq = putDataMapReq.asPutDataRequest()
-        Wearable.getDataClient(this).putDataItem(putDataReq)
-    */
-        }
+        //TODO implement the for in loop
     }
 
     private final Bitmap drawableToBitmap(Drawable drawable) {
@@ -75,4 +86,7 @@ public class PhoneNotificationListener extends NotificationListenerService {
         drawable.draw(canvas);
         return bitmap;
     }
+
+    //TODO: Implement bitmapToByteArray
+    //TODO: Implement  createBurnInSafeBitmap
 }
