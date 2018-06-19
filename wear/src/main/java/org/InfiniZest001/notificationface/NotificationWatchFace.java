@@ -11,6 +11,8 @@ import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
 import android.view.SurfaceHolder;
+
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.wearable.*;
 
 import org.jfedor.notificationface.MyWatchFace;
@@ -32,7 +34,7 @@ public class NotificationWatchFace extends CanvasWatchFaceService {
     }
 
     //public final class Engine extends CanvasWatchFaceService.Engine implements DataClient.OnDataChangedListener {
-    public final class Engine extends CanvasWatchFaceService.Engine {
+    public final class Engine extends CanvasWatchFaceService.Engine implements DataClient.OnDataChangedListener{
         private Random random = new Random();
 
         private Typeface typeface = Typeface.createFromAsset(NotificationWatchFace.this.getAssets(), "Product-Regular.ttf");
@@ -51,7 +53,13 @@ public class NotificationWatchFace extends CanvasWatchFaceService {
         private boolean lowBitAmbient;
         private boolean burnInProtection;
 
-        private final BroadcastReceiver timeZoneReciever;
+        private final BroadcastReceiver timeZoneReciever = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                calendar.setTimeZone(TimeZone.getDefault());
+                invalidate();
+            }
+        };
 
         @Override
         public void onCreate(SurfaceHolder holder) {
@@ -126,18 +134,9 @@ public class NotificationWatchFace extends CanvasWatchFaceService {
 
             if(visible) {
                 Wearable.getDataClient(NotificationWatchFace.this).addListener(this);
-                Wearable.getDataClient(NotificationWatchFace.this).getDataItems().addOnSuccessListener((DataClient.OnDataChangedListener) { dataItemBuffer -> {
-                for(DataItem dataItem : dataItemBuffer) {
-                    Engine.this.processDataItem(dataItem);
+                //TODO: Fix line 132
+                //Wearable.getDataClient(NotificationWatchFace.this).getDataItems().addOnSuccessListener...
                 }
-                dataItemBuffer.release();
-                Engine.this.invalidate();
-                }
-                registerReceiver();
-                }
-        } else {
-                Wearable.getDataClient(NotificationWatchFace.this).removeListener(this);
-            }
         }
         private final void registerReceiver() {
             if (!this.registeredTimeZoneReceiver) {
